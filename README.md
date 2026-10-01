@@ -39,8 +39,7 @@
 
 ## What This Does
 
-<!-- Three or four sentences: what a user asks for, and what they get back. -->
-
+FitFindr takes a natural-language thrift-shopping request and searches a local set of listings by description, size, and maximum price. When it finds a match, the agent selects the top result, asks for outfit ideas using the user's wardrobe, and turns that suggestion into a short fit-card caption. When no listings match, it stops and tells the user which search details to change instead of continuing. The planning logic and state are handled in `agent.py::run_agent`.
 
 
 ---
@@ -91,22 +90,26 @@
      The grader checks your code against what you claim here, so the file and
      function have to be real. -->
 
-**Branch rule:**
+**Branch rule:** If `search_listings` returns an empty list, the agent puts a message in `session["error"]` explaining that the user can change the item description, size, or maximum price, then stops. If results are returned, the agent selects the first result and continues to `suggest_outfit`, then `create_fit_card`.
 
 **Where it lives:** `agent.py::run_agent`
 
-**How the query is parsed:** <!-- regex, string splitting, or asking the model — say which -->
+**How the query is parsed:** Regular expressions are used to extract an optional size and maximum price from the user's query. The remaining text is used as the description.
 
-**What moves through the session:** <!-- which fields, in what order -->
-
+**What moves through the session:** The query is stored first, then the parsed description/size/max_price, search results, selected item, wardrobe, outfit suggestion, and finally the fit card. On an empty search, `error` is set and `fit_card` remains `None`.
 ---
 
 ## Sample Run
+=== A query the data can match ===
+  found: Y2K Baby Tee — Butterfly Print — $18.0 on depop
+  outfit: [model-generated outfit suggestion]
+  fit card: [model-generated fit-card caption]
 
-<!-- Two things go here.
-
-     1. One FULL query and its output, pasted as text.
-     2. Your three per-tool terminal tests — the command and what it printed. -->
+=== A query it can't ===
+  stopped: No listings matched that search. Try changing the item description, size, or maximum price.
+  fit_card is None — it should still be None here
+The second one should stop before the fit card...
+\
 
 **One full query**
 
@@ -123,37 +126,24 @@ $ python -c "from tools import search_listings; print(search_listings('graphic t
 ```
 
 ```
-$ python -c "from tools import suggest_outfit; ..."
-
+python -c "from tools import suggest_outfit; from utils.data_loader import get_example_wardrobe, load_listings; print(suggest_outfit(load_listings()[0], get_example_wardrobe()))"
 ```
 
 ```
-$ python -c "from tools import create_fit_card; ..."
-
+python -c "from tools import create_fit_card; from utils.data_loader import load_listings; print(create_fit_card('jeans and white sneakers', load_listings()[0]))"
 ```
 
 ---
 
 ## How I Used AI
 
-<!-- Two specific moments. What you asked, what came back, what you changed.
+### Moment 1 — Implementing the Tools
 
-     "I used Claude to help me code" is not enough.
+I asked ChatGPT for help turning the starter tool specifications into working implementations for `search_listings`, `suggest_outfit`, and `create_fit_card`. The response suggested code for each tool, including the required inputs, filtering behavior, wardrobe handling, and model-generated fit cards. I then ran each tool individually from the terminal and kept the implementation after confirming that the outputs matched the intended behavior.
 
-     "I gave Claude my search_listings spec. It returned None on no match
-     instead of an empty list, so I changed it" is the level we want. -->
+### Moment 2 — Building the Planning Loop
 
-**Moment 1**
-
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
-
-**Moment 2**
-
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+I asked ChatGPT for help implementing `agent.py::run_agent` with session state and a branch for an empty search. The response suggested storing each tool result in the session and stopping when `search_listings` returned an empty list. I tested the agent with both a matching query and a query with no matches, and confirmed that the successful path produced a fit card while the empty path stopped with `session["fit_card"]` still set to `None`.
 
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
