@@ -59,26 +59,24 @@
 
 ### `search_listings`
 
-- **What it does:**
-- **Inputs:** <!-- name and type each: `max_price` (float), not "a price" -->
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Searches the thrift listings for items matching the requested description, size, and maximum price, then ranks matching items by keyword overlap.
+- **Inputs:** `description` (str), `size` (str or None), `max_price` (float or None)
+- **Returns:** A list of matching listing dictionaries, each containing the listing's id, title, description, category, style_tags, size, condition, price, colors, brand, and platform, ordered by match score.
+- **When it has nothing:** Returns an empty list (`[]`) when no listing matches the filters and description keywords.
 
 ### `suggest_outfit`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
+- **What it does:** Uses the new listing and the user's wardrobe to suggest one or two outfits.
+- **Inputs:** `new_item` (dict), `wardrobe` (dict containing an `items` list)
+- **Returns:** A non-empty string containing outfit suggestions based on the new item and wardrobe.
+- **When it has nothing:** If the wardrobe has no items, returns general styling advice for the new item instead of raising an error or returning an empty string.
 
 ### `create_fit_card`
 
-- **What it does:**
-- **Inputs:**
-- **Returns:**
-- **When it has nothing:**
-
----
+- **What it does:** Uses the selected item and outfit suggestion to create a short social-media-style caption for the find.
+- **Inputs:** `outfit` (str), `new_item` (dict)
+- **Returns:** A two-to-four sentence caption that mentions the item, price, platform, and overall style or vibe.
+- **When it has nothing:** If the outfit is empty or only whitespace, returns a descriptive message instead of raising an error.
 
 ## Planning Loop
 
