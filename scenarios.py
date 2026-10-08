@@ -35,8 +35,27 @@ SCENARIOS = [
         "wardrobe": "empty",
         "criterion": None,
     },
-    # TODO: add what your criteria 3, 4 and 5 need.
-    #
+    {
+        # Criterion 3 — verify the selected item carries through session state.
+        "name": "selected item carries through state",
+        "query": "vintage graphic hoodie under $30",
+        "wardrobe": "example",
+        "criterion": 3,
+    },
+    {
+        # Criterion 4 — evaluate whether the fit card describes the selected item.
+        "name": "fit card uses selected item",
+        "query": "vintage graphic hoodie under $30",
+        "wardrobe": "example",
+        "criterion": 4,
+    },
+    {
+        # Criterion 5 — an empty search must leave fit_card as None.
+        "name": "empty search leaves no fit card",
+        "query": "designer ballgown size XXS under $5",
+        "wardrobe": "example",
+        "criterion": 5,
+    },    #
     # Set "criterion" to the number in criteria.md that the scenario tests.
     # "criterion": None means a diagnostic run — useful to have, but it isn't
     # one of your five, and run_eval.py marks it as such in the table.
