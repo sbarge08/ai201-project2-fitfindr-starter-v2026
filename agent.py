@@ -8,8 +8,8 @@ to the next and branches when a search returns no results.
 import re
 
 import trace
-from tools import search_listings, suggest_outfit, create_fit_card
-
+from tools import suggest_outfit, create_fit_card
+from mcp_client import call_tool
 
 def new_session(query: str, wardrobe: dict) -> dict:
     """
@@ -87,11 +87,14 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     session["parsed"] = _parse_query(query)
 
     # Search using the parsed values.
-    session["search_results"] = search_listings(
-        session["parsed"]["description"],
-        size=session["parsed"]["size"],
-        max_price=session["parsed"]["max_price"],
-    )
+    session["search_results"] = call_tool(
+    "search_listings",
+    {
+        "description": session["parsed"]["description"],
+        "size": session["parsed"]["size"],
+        "max_price": session["parsed"]["max_price"],
+    },
+)
 
     # Branch: an empty search must stop before suggest_outfit.
     if not session["search_results"]:
