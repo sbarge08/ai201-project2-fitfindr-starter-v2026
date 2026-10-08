@@ -10,6 +10,7 @@ import re
 import trace
 from tools import suggest_outfit, create_fit_card
 from mcp_client import call_tool
+from generate import ModelUnavailable
 
 def new_session(query: str, wardrobe: dict) -> dict:
     """
@@ -76,52 +77,128 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     Run the FitFindr planning loop once and return the finished session.
     """
     session = new_session(query, wardrobe)
+    trace.start_trace()
 
-    # This Unit 3 loop has a fixed sequence with one important branch:
-    # search -> empty? stop : select item -> outfit -> fit card.
     count = 0
     count += 1
     trace.check_iterations(count)
 
-    # Parse the user's query and save the parsed state.
+    # Parse the user's query.
     session["parsed"] = _parse_query(query)
 
-    # Search using the parsed values.
-    session["search_results"] = call_tool(
-    "search_listings",
-    {
+    trace.step(
+        "parse_query",
+        inputs=query,
+        returned=session["parsed"],
+    )
+
+    # Search through MCP.
+    search_inputs = {
         "description": session["parsed"]["description"],
         "size": session["parsed"]["size"],
         "max_price": session["parsed"]["max_price"],
-    },
-)
+    }
 
-    # Branch: an empty search must stop before suggest_outfit.
+    session["search_results"] = call_tool(
+        "search_listings",
+        search_inputs,
+    )
+
+    trace.step(
+        "search_listings (via MCP)",
+        inputs=search_inputs,
+        returned=session["search_results"],
+    )
+
+    # Branch: stop if the search is empty.
     if not session["search_results"]:
         session["error"] = (
             "No listings matched that search. Try changing the item description, "
             "size, or maximum price."
         )
+
+        trace.step(
+            "empty-search branch",
+            returned=session["error"],
+            note="branch: empty, stopping",
+        )
+
         return session
 
-    # Carry the first search result through session state.
+    # Select the first result.
     session["selected_item"] = session["search_results"][0]
 
-    # Use the selected item from session state.
-    session["outfit_suggestion"] = suggest_outfit(
-        session["selected_item"],
-        session["wardrobe"],
+    trace.step(
+        "select_item",
+        inputs=session["search_results"],
+        returned=session["selected_item"],
     )
 
-    # Use both the outfit and selected item from session state.
-    session["fit_card"] = create_fit_card(
-        session["outfit_suggestion"],
-        session["selected_item"],
+    # Generate outfit advice.
+    outfit_inputs = {
+        "new_item": session["selected_item"],
+        "wardrobe": session["wardrobe"],
+    }
+
+    try:
+        session["outfit_suggestion"] = suggest_outfit(
+            session["selected_item"],
+            session["wardrobe"],
+        )
+    except ModelUnavailable:
+        session["error"] = (
+            "The styling model could not be reached. "
+            "Check your API key or try again later."
+        )
+
+        trace.step(
+            "suggest_outfit",
+            inputs=outfit_inputs,
+            returned="ModelUnavailable",
+            note="stopping",
+        )
+
+        return session
+
+    trace.step(
+        "suggest_outfit",
+        inputs=outfit_inputs,
+        returned=session["outfit_suggestion"],
+    )
+
+    # Generate the fit card.
+    fit_card_inputs = {
+        "outfit": session["outfit_suggestion"],
+        "new_item": session["selected_item"],
+    }
+
+    try:
+        session["fit_card"] = create_fit_card(
+            session["outfit_suggestion"],
+            session["selected_item"],
+        )
+    except ModelUnavailable:
+        session["error"] = (
+            "The styling model could not be reached. "
+            "Check your API key or try again later."
+        )
+
+        trace.step(
+            "create_fit_card",
+            inputs=fit_card_inputs,
+            returned="ModelUnavailable",
+            note="stopping",
+        )
+
+        return session
+
+    trace.step(
+        "create_fit_card",
+        inputs=fit_card_inputs,
+        returned=session["fit_card"],
     )
 
     return session
-
-
 def _show(session: dict) -> None:
     if session["error"]:
         print(f"  stopped: {session['error']}")

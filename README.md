@@ -227,6 +227,21 @@ that produced it:
 **Happy path**
 
 ```
+[1] parse_query
+      in:  vintage graphic hoodie under $30
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: 10 items: Vintage Graphic Hoodie — Faded Black, Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+[3] select_item
+      in:  10 items: Vintage Graphic Hoodie — Faded Black, Y2K Baby Tee — Butterfly Print, Graphic Tee — 2003 Tour Bootleg Style … +7 more
+      out: Vintage Graphic Hoodie — Faded Black ($26.0, depop)
+[4] suggest_outfit
+      in:  dict with keys: new_item, wardrobe
+      out: Hey there! That vintage graphic hoodie is an absolute goldmine—the faded black wash and subtle pilling give it…
+[5] create_fit_card
+      in:  dict with keys: outfit, new_item
+      out: Scored this faded black vintage graphic hoodie on Depop for just $26, and the perfectly worn-in pilling gives …
 
 ```
 
@@ -240,7 +255,7 @@ that produced it:
 behaved differently afterwards. If the rewire didn't work, say exactly where it
 broke — the error text and the last thing that worked. That earns the point in
 full. -->
-
+I moved `search_listings` from a direct Python function call to the MCP server. The agent now calls it through `mcp_client.call_tool()`. The returned search results behaved the same as before, and the normal FitFindr flow continued to work.
 
 
 ---
