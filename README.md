@@ -165,18 +165,65 @@ I asked ChatGPT for help implementing `agent.py::run_agent` with session state a
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
-
+| 1. Successful search completes the full flow | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 2. Empty search stops before outfit suggestions | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 3. State carries the found item | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 4. Fit card uses the selected item | 4 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
+| 5. Empty search does not create a fit card | 5 of 5 | PASS | PASS | PASS | PASS | PASS | MET (5/5) |
 **Real output from one try**, pasted as text, naming the file and function
 that produced it:
 
+**Criterion 1 — `agent.py::run_agent`**
+
+```text
+[2] search_listings (via MCP)
+[3] select_item
+[4] suggest_outfit
+[5] create_fit_card
 ```
 
+The successful query completed the full flow and returned a non-empty fit card.
+
+**Criterion 2 — `agent.py::run_agent`**
+
+```text
+[2] search_listings (via MCP)
+      out: [] (empty)
+[3] empty-search branch
+      out: No listings matched that search. Try changing the item description, size, or maximum price.
+      →    branch: empty, stopping
 ```
+
+**Criterion 3 — `agent.py::run_agent`**
+
+```text
+[2] search_listings (via MCP)
+      out: 10 items: Vintage Graphic Hoodie — Faded Black, ...
+[3] select_item
+      out: Vintage Graphic Hoodie — Faded Black ($26.0, depop)
+[4] suggest_outfit
+      in: dict with keys: new_item, wardrobe
+```
+
+The same selected item was carried from the search results into the outfit step.
+
+**Criterion 4 — `agent.py::run_agent` / `create_fit_card`**
+
+```text
+Scored this perfectly faded vintage graphic hoodie on Depop for just $26, and the worn-in texture is unmatched. It has that ultimate effortless grunge energy, making it super easy to throw on with baggy denim and combat boots for a 90s streetwear fit.
+```
+
+**Criterion 5 — `agent.py::run_agent`**
+
+```text
+[2] search_listings (via MCP)
+      out: [] (empty)
+[3] empty-search branch
+      out: No listings matched that search. Try changing the item description, size, or maximum price.
+      →    branch: empty, stopping
+```
+
+The run stopped before `create_fit_card`, so no fit card was created.
 
 ---
 
@@ -200,14 +247,15 @@ that produced it:
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
-
+| 1 | Successful search completes the full flow | 4 of 5 | MET (5/5) | All five tries completed search, outfit suggestion, and fit-card creation. |
+| 2 | Empty search stops before outfit suggestions | 5 of 5 | MET (5/5) | All five tries stopped at the empty-search branch before suggest_outfit. |
+| 3 | State carries the found item | 5 of 5 | MET (5/5) | The selected Vintage Graphic Hoodie carried into the outfit step on every try. |
+| 4 | Fit card uses the selected item | 4 of 5 | MET (5/5) | All five fit cards clearly described the selected hoodie and included outfit-related wording. |
+| 5 | Empty search does not create a fit card | 5 of 5 | MET (5/5) | Every empty-search run stopped before create_fit_card. |
 **Diagnoses**
+No acceptance criterion was missed in the before run, so there is no failed step requiring a failure diagnosis.
 
+Criteria 1 and 4 had targets of 4 out of 5 but both achieved 5 out of 5. If I were making the standard stricter in a future test, I would tighten Criterion 4 because generated fit cards should consistently stay tied to the selected item even though model wording can vary.
 
 
 ---
@@ -248,6 +296,15 @@ that produced it:
 **Empty search**
 
 ```
+[1] parse_query
+      in:  diamond astronaut spacesuit under $1 size XXXXL
+      out: dict with keys: description, size, max_price
+[2] search_listings (via MCP)
+      in:  dict with keys: description, size, max_price
+      out: [] (empty)
+[3] empty-search branch
+      out: No listings matched that search. Try changing the item description, size, or maximum price.
+      →    branch: empty, stopping
 
 ```
 
@@ -275,12 +332,11 @@ I moved `search_listings` from a direct Python function call to the MCP server. 
 
 | Criterion | Target | Try 1 | Try 2 | Try 3 | Try 4 | Try 5 | Verdict |
 |---|---|---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |  |  |
-
+| 1. Successful search completes the full flow | 4 of 5 |  |  |  |  |  |  |
+| 2. Empty search stops before outfit suggestions | 5 of 5 |  |  |  |  |  |  |
+| 3. State carries the found item | 5 of 5 |  |  |  |  |  |  |
+| 4. Fit card uses the selected item | 4 of 5 |  |  |  |  |  |  |
+| 5. Empty search does not create a fit card | 5 of 5 |  |  |  |  |  |  |
 **Did it help, and how do I know:**
 
 <!-- If it made things worse, say that. Honestly reported, that earns full
