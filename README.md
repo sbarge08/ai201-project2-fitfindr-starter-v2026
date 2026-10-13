@@ -144,7 +144,9 @@ I asked ChatGPT for help turning the starter tool specifications into working im
 ### Moment 2 — Building the Planning Loop
 
 I asked ChatGPT for help implementing `agent.py::run_agent` with session state and a branch for an empty search. The response suggested storing each tool result in the session and stopping when `search_listings` returned an empty list. I tested the agent with both a matching query and a query with no matches, and confirmed that the successful path produced a fit card while the empty path stopped with `session["fit_card"]` still set to `None`.
+### Moment 3 — Testing and Measuring an Improvement
 
+I used ChatGPT during Unit 4 to help map my acceptance criteria to test scenarios, interpret the before-run evidence, and identify one focused improvement to `create_fit_card`. I used it to check my Git diff before testing, interpret the actual after-run results, and compare the before and after runs without changing the results to make them look better. The after run showed that model availability caused several failures even though the grounded fit-card outputs were stronger when generation succeeded.
 <!-- ═══════════════════════ UNIT 4 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 3.
