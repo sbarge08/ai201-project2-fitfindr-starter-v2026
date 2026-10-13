@@ -157,13 +157,14 @@ Write a short social-media-style fit card caption for this thrift find.
 
 The caption must:
 - be 2 to 4 sentences
-- mention the item
-- mention its price
+- clearly identify the selected item by its title or unmistakable description
+- mention its exact price
 - mention its platform
 - describe the overall vibe
-- connect the caption to the suggested outfit
+- mention at least one specific clothing piece from the suggested outfit
+- stay grounded in the ITEM and OUTFIT details provided below
+- do not invent item features, colors, materials, condition details, or outfit pieces
 - sound like a real fashion post, not a product listing
-
 ITEM:
 Title: {new_item.get('title', 'Unknown item')}
 Description: {new_item.get('description', '')}
